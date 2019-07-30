@@ -36,7 +36,7 @@ impl File {
         self.inode.metadata()
     }
 
-    pub fn get_entry(&self, id: usize) -> Result<String> {
+    pub fn get_entry(&self, id: usize) -> Result<(usize, String)> {
         self.inode.get_entry(id)
     }
 }

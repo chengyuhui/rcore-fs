@@ -1,8 +1,6 @@
 #![cfg_attr(not(any(test, feature = "std")), no_std)]
-#![feature(alloc)]
 
 extern crate alloc;
-#[macro_use]
 extern crate log;
 
 use alloc::{
@@ -288,18 +286,18 @@ impl INode for LockedINode {
         }
     }
 
-    fn get_entry(&self, id: usize) -> Result<String> {
+    fn get_entry(&self, id: usize) -> Result<(usize, String)> {
         let file = self.0.read();
         if file.extra.type_ != FileType::Dir {
             return Err(FsError::NotDir);
         }
 
         match id {
-            0 => Ok(String::from(".")),
-            1 => Ok(String::from("..")),
+            0 => Ok((0, String::from("."))),
+            1 => Ok((1, String::from(".."))),
             i => {
                 if let Some(s) = file.children.keys().nth(i - 2) {
-                    Ok(s.to_string())
+                    Ok((id, s.to_string()))
                 } else {
                     Err(FsError::EntryNotFound)
                 }

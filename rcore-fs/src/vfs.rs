@@ -61,7 +61,7 @@ pub trait INode: Any + Sync + Send {
     fn find(&self, name: &str) -> Result<Arc<dyn INode>>;
 
     /// Get the name of directory entry
-    fn get_entry(&self, id: usize) -> Result<String>;
+    fn get_entry(&self, id: usize) -> Result<(usize, String)>;
 
     /// Control device
     fn io_control(&self, cmd: u32, data: usize) -> Result<()>;
@@ -89,7 +89,7 @@ impl dyn INode {
         Ok((0..)
             .map(|i| self.get_entry(i))
             .take_while(|result| result.is_ok())
-            .filter_map(|result| result.ok())
+            .filter_map(|result| result.ok().map(|s| s.1))
             .collect())
     }
 

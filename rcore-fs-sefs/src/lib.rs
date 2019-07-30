@@ -1,5 +1,4 @@
 #![cfg_attr(not(any(test, feature = "std")), no_std)]
-#![feature(alloc)]
 
 extern crate alloc;
 
@@ -15,7 +14,6 @@ use core::fmt::{Debug, Error, Formatter};
 use core::mem::uninitialized;
 
 use bitvec::BitVec;
-use log::*;
 use rcore_fs::dev::TimeProvider;
 use rcore_fs::dirty::Dirty;
 use rcore_fs::vfs::{self, FileSystem, FsError, INode, Timespec};
@@ -411,7 +409,7 @@ impl vfs::INode for INodeImpl {
         let inode_id = self.get_file_inode_id(name).ok_or(FsError::EntryNotFound)?;
         Ok(self.fs.get_inode(inode_id))
     }
-    fn get_entry(&self, id: usize) -> vfs::Result<String> {
+    fn get_entry(&self, id: usize) -> vfs::Result<(usize, String)> {
         if self.disk_inode.read().type_ != FileType::Dir {
             return Err(FsError::NotDir);
         }
@@ -419,7 +417,7 @@ impl vfs::INode for INodeImpl {
             return Err(FsError::EntryNotFound);
         };
         let entry = self.file.read_direntry(id)?;
-        Ok(String::from(entry.name.as_ref()))
+        Ok((entry.id as usize, String::from(entry.name.as_ref())))
     }
     fn io_control(&self, _cmd: u32, _data: usize) -> vfs::Result<()> {
         Err(FsError::NotSupported)

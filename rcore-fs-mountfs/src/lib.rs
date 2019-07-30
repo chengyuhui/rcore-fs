@@ -1,5 +1,4 @@
 #![cfg_attr(not(any(test, feature = "std")), no_std)]
-#![feature(alloc)]
 
 extern crate alloc;
 #[macro_use]
@@ -210,7 +209,8 @@ impl MNode {
     /// If `child` is a child of `self`, return its name.
     pub fn find_name_by_child(&self, child: &Arc<MNode>) -> Result<String> {
         for index in 0.. {
-            let name = self.inode.get_entry(index)?;
+            let entry = self.inode.get_entry(index)?;
+            let name = entry.1;
             match name.as_ref() {
                 "." | ".." => {}
                 _ => {
@@ -311,7 +311,7 @@ impl INode for MNode {
         Ok(self.find(false, name)?)
     }
 
-    fn get_entry(&self, id: usize) -> Result<String> {
+    fn get_entry(&self, id: usize) -> Result<(usize, String)> {
         self.inode.get_entry(id)
     }
 

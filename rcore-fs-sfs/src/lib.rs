@@ -1,5 +1,4 @@
 #![cfg_attr(not(any(test, feature = "std")), no_std)]
-#![feature(alloc)]
 #![feature(const_str_len)]
 
 extern crate alloc;
@@ -671,7 +670,7 @@ impl vfs::INode for INodeImpl {
         let inode_id = self.get_file_inode_id(name).ok_or(FsError::EntryNotFound)?;
         Ok(self.fs.get_inode(inode_id))
     }
-    fn get_entry(&self, id: usize) -> vfs::Result<String> {
+    fn get_entry(&self, id: usize) -> vfs::Result<(usize, String)> {
         if self.disk_inode.read().type_ != FileType::Dir {
             return Err(FsError::NotDir);
         }
@@ -679,7 +678,7 @@ impl vfs::INode for INodeImpl {
             return Err(FsError::EntryNotFound);
         };
         let entry = self.read_direntry(id)?;
-        Ok(String::from(entry.name.as_ref()))
+        Ok((entry.id as usize, String::from(entry.name.as_ref())))
     }
     fn io_control(&self, _cmd: u32, _data: usize) -> vfs::Result<()> {
         if self.metadata().unwrap().type_ != vfs::FileType::CharDevice {
@@ -868,7 +867,9 @@ impl SimpleFileSystem {
     /// Get inode by id. Load if not in memory.
     /// ** Must ensure it's a valid INode **
     fn get_inode(&self, id: INodeId) -> Arc<INodeImpl> {
-        assert!(!self.free_map.read()[id]);
+        if self.free_map.read()[id] {
+            panic!("INode id {} not found in SFS", id);
+        }
 
         // In the BTreeSet and not weak.
         if let Some(inode) = self.inodes.read().get(&id) {
