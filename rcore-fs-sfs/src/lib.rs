@@ -535,6 +535,7 @@ impl vfs::INode for INodeImpl {
             inode.nlinks_inc(); //for .
             self.nlinks_inc(); //for ..
         }
+        info!("SFS: created {:?} {}", type_, name);
 
         Ok(inode)
     }
